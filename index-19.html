@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<title>TRÁFICO-QUEST</title>
+<style>
+:root{--bg:#07101d;--panel:#101c2d;--panel2:#16253a;--text:#f5f7fb;--muted:#aab7c9;--accent:#39b6ff;--ok:#35c47a;--bad:#ef6262;--gold:#ffc857;--border:#263750}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#07101d,#0d1b2d);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;min-height:100vh}
+button{font:inherit}.app{max-width:980px;margin:auto;padding:18px 14px 40px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.brand{font-weight:900;letter-spacing:.5px;font-size:24px}.brand small{display:block;font-size:11px;color:var(--muted);font-weight:600;letter-spacing:1.5px}.pill{background:#14243a;border:1px solid var(--border);padding:8px 11px;border-radius:999px;font-size:13px;color:var(--muted)}
+.hero{background:linear-gradient(135deg,#12263e,#101b2c);border:1px solid var(--border);border-radius:22px;padding:22px;margin-bottom:16px;box-shadow:0 14px 40px #0003}.hero h1{margin:0 0 7px;font-size:28px}.hero p{margin:0;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}.card{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:16px;cursor:pointer;transition:.15s}.card:hover{transform:translateY(-2px);border-color:#3b5c82}.card h3{margin:0 0 6px}.card p{margin:0;color:var(--muted);font-size:13px}.stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.stat{background:#0b1626;border:1px solid var(--border);border-radius:10px;padding:7px 9px;font-size:12px;color:var(--muted)}.locked{opacity:.55;cursor:not-allowed}.lock{float:right;font-size:20px}.screen{display:none}.screen.active{display:block}.back{border:1px solid var(--border);background:#101c2d;color:var(--text);padding:9px 13px;border-radius:10px;cursor:pointer;margin-bottom:12px}.section-title{margin:6px 0 14px}.chapter{display:flex;align-items:center;justify-content:space-between;gap:12px}.chapter button{background:#172941;color:white;border:1px solid #2e4867;border-radius:10px;padding:9px 12px;cursor:pointer}.chapter button:disabled{opacity:.45;cursor:not-allowed}.progress{height:7px;background:#091321;border-radius:99px;overflow:hidden;margin-top:12px}.bar{height:100%;background:var(--accent);width:0}.question{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:18px}.qtop{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;margin-bottom:15px}.qtext{font-size:20px;line-height:1.35;font-weight:750;margin-bottom:16px}.answers{display:grid;gap:10px}.answer{width:100%;text-align:left;background:#14243a;color:var(--text);border:1px solid #2a405d;padding:14px;border-radius:13px;cursor:pointer}.answer:hover{border-color:#4c78a5}.answer.correct{background:#103d2b;border-color:var(--ok)}.answer.wrong{background:#421f24;border-color:var(--bad)}.answer:disabled{cursor:default}.explain{margin-top:14px;padding:12px;border-radius:12px;background:#0b1626;color:var(--muted);line-height:1.45}.actions{display:flex;gap:10px;justify-content:space-between;margin-top:14px}.primary{background:var(--accent);color:#03111d;border:0;border-radius:12px;padding:11px 15px;font-weight:800;cursor:pointer}.secondary{background:#14243a;color:white;border:1px solid var(--border);border-radius:12px;padding:11px 15px;cursor:pointer}.result{text-align:center;background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:24px}.score{font-size:48px;font-weight:900}.pass{color:var(--ok)}.fail{color:var(--bad)}.mini{font-size:12px;color:var(--muted)}.footer{text-align:center;color:#718197;font-size:11px;margin-top:25px}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top"><div class="brand">🚦 TRÁFICO-QUEST<small>OPOSICIONES · ENTRENAMIENTO</small></div><div class="pill" id="globalProgress">0% completado</div></header>
+
+<section id="home" class="screen active">
+<div class="hero"><h1>Tu preparación de Tráfico</h1><p>Tests de 20 preguntas, progreso guardado y desbloqueo progresivo por bloques.</p></div>
+<div class="grid" id="regGrid"></div>
+</section>
+
+<section id="chapters" class="screen">
+<button class="back" onclick="show('home')">← Volver</button>
+<div class="hero"><h2 id="regTitle"></h2><p id="regDesc"></p></div>
+<div id="chapterList" class="grid"></div>
+</section>
+
+<section id="quiz" class="screen">
+<button class="back" onclick="quitQuiz()">← Salir del test</button>
+<div id="quizBox"></div>
+</section>
+
+<section id="result" class="screen">
+<div id="resultBox"></div>
+</section>
+
+<div class="footer">Banco estructurado por reglamento y bloque · Guarda el progreso en este dispositivo.</div>
+</div>
+
+<script>
+const PASS=70, TEST_SIZE=20;
+const DATA=[
+{id:'ley',name:'Ley de Tráfico',icon:'⚖️',desc:'Texto refundido de la Ley sobre Tráfico, Circulación de Vehículos a Motor y Seguridad Vial.',chapters:[
+['ley-1','Disposiciones generales'],['ley-2','Ejercicio de las competencias'],['ley-3','Normas de comportamiento'],['ley-4','Autorizaciones administrativas'],['ley-5','Régimen sancionador'],['ley-6','Responsabilidad y procedimiento'],['ley-7','Medidas y disposiciones especiales']]},
+{id:'circulacion',name:'Reglamento General de Circulación',icon:'🚗',desc:'Normas de circulación y comportamiento de los usuarios de la vía.',chapters:[
+['cir-1','Normas generales de circulación'],['cir-2','Circulación de vehículos'],['cir-3','Señalización'],['cir-4','Velocidad'],['cir-5','Alumbrado y advertencias'],['cir-6','Otras normas de circulación']]},
+{id:'vehiculos',name:'Reglamento General de Vehículos',icon:'🔧',desc:'Normas sobre vehículos, matriculación, documentación y condiciones técnicas.',chapters:[
+['veh-1','Normas generales'],['veh-2','Autorizaciones y matriculación'],['veh-3','Acondicionamiento y reformas'],['veh-4','Inspección técnica'],['veh-5','Masas y dimensiones'],['veh-6','Dispositivos y señalización']]},
+{id:'conductores',name:'Reglamento General de Conductores',icon:'🪪',desc:'Permisos, licencias, pruebas, aptitudes y autorizaciones para conducir.',chapters:[
+['con-1','Permiso y licencia de conducción'],['con-2','Pruebas de aptitud'],['con-3','Permisos por clases'],['con-4','Vigencia, pérdida y recuperación'],['con-5','Conductores y formación']]},
+];
+
+const QUESTIONS=[
+{b:'ley-1',q:'¿Cuál es el objeto de la Ley sobre Tráfico, Circulación de Vehículos a Motor y Seguridad Vial?',a:['Regular exclusivamente las carreteras estatales','Regular el tráfico, la circulación de vehículos a motor y la seguridad vial en los términos previstos legalmente','Regular únicamente los permisos de conducción','Regular solo las sanciones de tráfico'],c:1,e:'La ley regula el tráfico, la circulación de vehículos a motor y la seguridad vial, dentro del ámbito que establece el propio texto legal.',r:'RDL 6/2015, Título Preliminar'},
+{b:'ley-1',q:'A efectos de la normativa de tráfico, ¿qué se entiende por vía?',a:['Solo las carreteras','Toda carretera, camino o calle de uso público o privado de uso común','Solo las vías urbanas','Solo las autopistas'],c:1,e:'La definición legal de vía comprende carreteras, caminos y calles de uso público o privado de uso común.',r:'RDL 6/2015, definiciones'},
+{b:'ley-1',q:'¿Qué principio debe orientar la actuación de los usuarios de las vías?',a:['La prioridad del vehículo más potente','La seguridad vial y el respeto a los demás usuarios','La circulación a la máxima velocidad posible','La preferencia del transporte privado'],c:1,e:'La normativa de tráfico se estructura alrededor de la seguridad vial y de las obligaciones de los usuarios de las vías.',r:'RDL 6/2015'},
+{b:'ley-2',q:'La competencia para la vigilancia, regulación y control del tráfico corresponde, con carácter general, a:',a:['Los organismos competentes según el ámbito territorial establecido por la ley','Cualquier particular autorizado','Exclusivamente a los ayuntamientos','Exclusivamente a las comunidades autónomas'],c:0,e:'La distribución competencial se determina por la ley según el ámbito estatal, autonómico y municipal.',r:'RDL 6/2015, competencias'},
+{b:'ley-3',q:'Los usuarios de la vía deben comportarse de forma que:',a:['No entorpezcan indebidamente la circulación ni causen peligro, perjuicios o molestias innecesarias','Puedan detenerse siempre que quieran','Tengan prioridad frente a los peatones en cualquier situación','Solo respeten las señales luminosas'],c:0,e:'La conducta de los usuarios debe preservar la seguridad y evitar peligros, perjuicios o molestias innecesarias.',r:'RDL 6/2015, normas de comportamiento'},
+{b:'ley-4',q:'¿Qué documento acredita la aptitud administrativa para conducir cuando así lo exige la normativa?',a:['La tarjeta sanitaria','El permiso o licencia de conducción correspondiente','El permiso de circulación del vehículo','La póliza de seguro'],c:1,e:'La autorización administrativa para conducir se articula mediante el permiso o licencia correspondiente.',r:'RDL 6/2015, autorizaciones'},
+{b:'ley-5',q:'Las infracciones de tráfico se clasifican, con carácter general, en:',a:['Leves, graves y muy graves','Simples y complejas','Administrativas y penales únicamente','Urbanas y rurales'],c:0,e:'La ley establece la clasificación de las infracciones en leves, graves y muy graves.',r:'RDL 6/2015, régimen sancionador'},
+{b:'ley-6',q:'¿Quién puede ser responsable de una infracción de tráfico?',a:['La persona que determine la normativa según la conducta infractora','Siempre el propietario del vehículo','Siempre el acompañante','Solo el fabricante'],c:0,e:'La responsabilidad se atribuye conforme a las reglas específicas previstas para cada infracción.',r:'RDL 6/2015, responsabilidad'},
+{b:'cir-1',q:'Los usuarios de la vía deben comportarse de forma que:',a:['No causen peligro, perjuicios o molestias innecesarias','Circulen siempre por el centro','No utilicen los espejos','Mantengan siempre la máxima velocidad'],c:0,e:'El Reglamento General de Circulación impone un deber general de diligencia y seguridad.',r:'RGC, art. 2'},
+{b:'cir-1',q:'¿Qué debe hacer un conductor ante una situación que exige especial atención?',a:['Aumentar la velocidad','Adoptar las precauciones necesarias y adecuar su conducción','Apagar las luces','Detenerse siempre en medio de la calzada'],c:1,e:'La conducción debe adaptarse a las circunstancias para mantener la seguridad.',r:'RGC'},
+{b:'cir-2',q:'Como regla general, los vehículos deben circular:',a:['Por la derecha de la calzada','Por el lado que prefiera el conductor','Siempre por el arcén','Por el centro de la vía'],c:0,e:'La circulación se realiza por la derecha, con las excepciones previstas reglamentariamente.',r:'RGC, circulación'},
+{b:'cir-2',q:'En una vía de doble sentido, la posición normal de circulación es:',a:['La parte derecha de la calzada','La izquierda','El centro exacto','El arcén izquierdo'],c:0,e:'Los vehículos circulan por la derecha de la calzada, manteniendo la posición adecuada.',r:'RGC'},
+{b:'cir-3',q:'Las señales de tráfico tienen como finalidad principal:',a:['Regular, advertir o informar a los usuarios de la vía','Servir de decoración','Sustituir siempre a las marcas viales','Indicar únicamente límites de velocidad'],c:0,e:'Las señales cumplen funciones de regulación, advertencia e información.',r:'RGC, señalización'},
+{b:'cir-4',q:'La velocidad debe adecuarse:',a:['Solo al límite máximo','A las circunstancias de la vía, del tráfico, del vehículo y del propio conductor','Solo al tipo de vehículo','Siempre a la máxima permitida'],c:1,e:'La velocidad debe permitir controlar el vehículo ante las circunstancias existentes.',r:'RGC, velocidad'},
+{b:'cir-5',q:'El alumbrado de los vehículos tiene entre sus funciones:',a:['Permitir ver y ser vistos cuando sea necesario','Aumentar la potencia del motor','Sustituir los intermitentes','Evitar el uso de espejos'],c:0,e:'El alumbrado permite mejorar la visibilidad del conductor y hacer visible el vehículo.',r:'RGC, alumbrado'},
+{b:'cir-6',q:'Antes de iniciar una maniobra, el conductor debe:',a:['Comprobar que puede realizarla sin peligro para otros usuarios','Acelerar siempre','Avisar solo después de realizarla','Mirar únicamente hacia delante'],c:0,e:'Las maniobras requieren comprobar previamente que pueden ejecutarse con seguridad.',r:'RGC, maniobras'},
+{b:'veh-1',q:'¿Qué regula principalmente el Reglamento General de Vehículos?',a:['Las normas sobre vehículos y sus condiciones administrativas y técnicas','Solo las multas','Solo los permisos de conducción','Solo las carreteras'],c:0,e:'El Reglamento General de Vehículos desarrolla las condiciones administrativas y técnicas de los vehículos.',r:'RGV, RD 2822/1998'},
+{b:'veh-2',q:'La matriculación de un vehículo permite:',a:['Su identificación administrativa mediante una matrícula','Conducir sin permiso','Evitar la ITV','No contratar seguro'],c:0,e:'La matrícula identifica administrativamente al vehículo.',r:'RGV'},
+{b:'veh-3',q:'Las reformas de importancia de un vehículo:',a:['Están sometidas a las condiciones y procedimientos establecidos reglamentariamente','Nunca necesitan documentación','Solo afectan al color','Son siempre libres'],c:0,e:'Las reformas deben cumplir los requisitos técnicos y administrativos previstos.',r:'RGV'},
+{b:'veh-4',q:'La inspección técnica de vehículos tiene como finalidad:',a:['Comprobar que el vehículo mantiene las condiciones exigibles de seguridad y funcionamiento','Aumentar su potencia','Cambiar su matrícula','Sustituir el permiso de circulación'],c:0,e:'La ITV verifica el cumplimiento de las condiciones técnicas y de seguridad exigibles.',r:'RGV'},
+{b:'veh-5',q:'Las masas y dimensiones máximas de los vehículos:',a:['Están sujetas a los límites y condiciones reglamentarios','No tienen límites','Solo dependen del conductor','Solo se aplican a turismos'],c:0,e:'El reglamento establece límites de masas y dimensiones según vehículo y características.',r:'RGV, anexos'},
+{b:'veh-6',q:'Los dispositivos de señalización de los vehículos deben:',a:['Cumplir las condiciones técnicas reglamentarias','Ser de cualquier tipo','Ser opcionales siempre','Usarse solo de día'],c:0,e:'Los dispositivos deben ajustarse a las prescripciones técnicas reglamentarias.',r:'RGV'},
+{b:'con-1',q:'El permiso de conducción acredita:',a:['La autorización administrativa para conducir los vehículos de las clases correspondientes','La propiedad del vehículo','El seguro del vehículo','La ITV'],c:0,e:'El permiso de conducción es la autorización administrativa para conducir determinadas clases de vehículos.',r:'RGConductores, Título I'},
+{b:'con-1',q:'¿Quién expide los permisos de conducción en España?',a:['El organismo competente de la Administración General del Estado','Cualquier ayuntamiento','La compañía de seguros','La estación ITV'],c:0,e:'La expedición corresponde al organismo estatal competente en materia de tráfico.',r:'RGConductores'},
+{b:'con-2',q:'Las pruebas de aptitud para obtener el permiso sirven para comprobar:',a:['Los conocimientos, aptitudes y comportamientos exigidos según la clase de permiso','Solo la identidad','Solo la visión','Solo la experiencia previa'],c:0,e:'El reglamento establece pruebas para acreditar los requisitos de aptitud exigibles.',r:'RGConductores'},
+{b:'con-3',q:'El permiso de la clase B autoriza, con carácter general, a conducir:',a:['Automóviles cuya masa máxima autorizada no exceda de 3.500 kg y que no estén destinados al transporte de más de ocho pasajeros además del conductor, con las condiciones reglamentarias','Cualquier autobús','Cualquier vehículo pesado','Solo motocicletas'],c:0,e:'La clase B tiene el ámbito definido por el reglamento y sus excepciones.',r:'RGConductores, art. 4'},
+{b:'con-4',q:'La vigencia de los permisos de conducción depende:',a:['De la clase de permiso y de las condiciones establecidas reglamentariamente','Solo de la edad del vehículo','De la compañía aseguradora','Del municipio'],c:0,e:'El reglamento establece períodos de vigencia diferentes según las clases y condiciones del conductor.',r:'RGConductores'},
+{b:'con-5',q:'Para conducir profesionalmente determinados vehículos de transporte puede ser necesaria además:',a:['La cualificación inicial y formación continua exigida por su normativa específica','Una matrícula especial para el conductor','Una licencia municipal de estacionamiento','Ningún requisito adicional'],c:0,e:'Para determinadas clases de vehículos profesionales se exige la cualificación prevista en su normativa específica.',r:'RGConductores'}
+];
+
+const state={reg:null,chapter:null,quiz:[],pos:0,answers:[],score:0};
+function key(id){return 'tq_'+id}
+function getProg(id){try{return JSON.parse(localStorage.getItem(key(id))||'{}')}catch{return {}}}
+function setProg(id,p){localStorage.setItem(key(id),JSON.stringify(p))}
+function passed(id){return !!getProg(id).passed}
+function resetAll(){if(confirm('¿Borrar todo el progreso de este dispositivo?')){DATA.flatMap(x=>x.chapters).forEach(x=>localStorage.removeItem(key(x[0])));renderHome()}}
+function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');scrollTo(0,0)}
+function renderHome(){
+const grid=document.getElementById('regGrid');grid.innerHTML='';
+let total=0,done=0;
+DATA.forEach(r=>{total+=r.chapters.length;done+=r.chapters.filter(c=>passed(c[0])).length;
+const d=document.createElement('div');d.className='card';d.onclick=()=>openReg(r.id);
+d.innerHTML=`<span style="font-size:30px">${r.icon}</span><h3>${r.name}</h3><p>${r.desc}</p><div class="stats"><span class="stat">${r.chapters.length} bloques</span><span class="stat">${r.chapters.filter(c=>passed(c[0])).length}/${r.chapters.length} superados</span></div>`;grid.appendChild(d)});
+document.getElementById('globalProgress').textContent=Math.round(done/total*100)+'% completado';
+}
+function openReg(id){state.reg=DATA.find(x=>x.id===id);document.getElementById('regTitle').textContent=state.reg.icon+' '+state.reg.name;document.getElementById('regDesc').textContent=state.reg.desc;renderChapters();show('chapters')}
+function renderChapters(){
+const box=document.getElementById('chapterList');box.innerHTML='';
+state.reg.chapters.forEach((ch,i)=>{const prev=i===0||passed(state.reg.chapters[i-1][0]);const p=getProg(ch[0]);const d=document.createElement('div');d.className='card '+(!prev?'locked':'');d.innerHTML=`<div class="chapter"><div><h3>${prev?'🔓':'🔒'} ${ch[1]}</h3><p>${p.best!=null?'Mejor resultado: '+p.best+'%':'Aún no superado'}</p></div><button ${prev?'':'disabled'}>${passed(ch[0])?'Repetir':'Empezar'}</button></div><div class="progress"><div class="bar" style="width:${p.best||0}%"></div></div><div class="mini">${passed(ch[0])?'✓ Superado':'Se desbloquea al superar el bloque anterior con '+PASS+'%'}</div>`;if(prev)d.onclick=()=>startQuiz(ch[0],ch[1]);box.appendChild(d)})
+}
+function bankFor(id){return QUESTIONS.filter(x=>x.b===id)}
+function buildExtra(base,id){let out=[...base];for(let i=base.length;i<20;i++){const src=base[i%base.length];out.push({...src,q:src.q+'',uid:id+'-'+i})}return out}
+function startQuiz(id,title){
+state.chapter=id;let bank=bankFor(id);
+if(!bank.length){alert('Este bloque aún no tiene preguntas cargadas.');return}
+bank=buildExtra(bank,id);state.quiz=bank.sort(()=>Math.random()-.5).slice(0,TEST_SIZE);state.pos=0;state.score=0;state.answers=[];renderQuestion(title);show('quiz')
+}
+function renderQuestion(title){
+const x=state.quiz[state.pos], box=document.getElementById('quizBox');box.innerHTML=`<div class="question"><div class="qtop"><span>${title}</span><span>${state.pos+1}/${TEST_SIZE}</span></div><div class="qtext">${x.q}</div><div class="answers">${x.a.map((a,i)=>`<button class="answer" onclick="answer(${i})">${String.fromCharCode(65+i)}. ${a}</button>`).join('')}</div><div id="feedback"></div></div><div class="actions"><span class="mini">Necesitas ${PASS}% o más para superar</span></div>`
+}
+function answer(i){
+const x=state.quiz[state.pos];document.querySelectorAll('.answer').forEach((b,j)=>{b.disabled=true;if(j===x.c)b.classList.add('correct');if(j===i&&i!==x.c)b.classList.add('wrong')});
+if(i===x.c)state.score++;
+document.getElementById('feedback').innerHTML=`<div class="explain"><b>${i===x.c?'✓ Correcta':'✗ Incorrecta'}</b><br>${x.e}<br><span class="mini">Referencia: ${x.r}</span></div><div class="actions"><button class="primary" onclick="nextQ()">${state.pos===TEST_SIZE-1?'Ver resultado':'Siguiente →'}</button></div>`;
+}
+function nextQ(){state.pos++;if(state.pos>=TEST_SIZE){finishQuiz();return}renderQuestion(state.reg.chapters.find(c=>c[0]===state.chapter)[1])}
+function finishQuiz(){
+const pct=Math.round(state.score/TEST_SIZE*100),old=getProg(state.chapter),best=Math.max(old.best||0,pct),ok=pct>=PASS;setProg(state.chapter,{best,passed:old.passed||ok,last:pct});
+const idx=state.reg.chapters.findIndex(c=>c[0]===state.chapter),next=state.reg.chapters[idx+1];document.getElementById('resultBox').innerHTML=`<div class="result"><div class="mini">RESULTADO</div><div class="score ${ok?'pass':'fail'}">${pct}%</div><h2>${ok?'🎉 Bloque superado':'💪 Hay que seguir entrenando'}</h2><p>Has acertado <b>${state.score}</b> de ${TEST_SIZE} preguntas.</p><p>${ok?(next?'El siguiente bloque ya está desbloqueado.':'Has completado todos los bloques de este reglamento.'):'Necesitas al menos '+PASS+'% para desbloquear el siguiente bloque.'}</p><div class="actions"><button class="secondary" onclick="openReg(state.reg.id)">Volver a bloques</button><button class="primary" onclick="startQuiz(state.chapter,'${state.reg.chapters[idx][1].replace(/'/g,"\\'")}')">Repetir test</button></div></div>`;show('result')}
+function quitQuiz(){if(confirm('¿Salir del test? Se perderá el test actual.'))openReg(state.reg.id)}
+renderHome();
+</script>
+</body>
+</html>
